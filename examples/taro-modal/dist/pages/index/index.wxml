@@ -1,0 +1,6 @@
+<block wx:if="{{$taroCompReady}}">
+    <view class="index">
+        <button type="default" bindtap="showModal" data-e-tap-so="this">Open Modal</button>
+        <my-modal compid="{{$compid__1}}"></my-modal>
+    </view>
+</block>

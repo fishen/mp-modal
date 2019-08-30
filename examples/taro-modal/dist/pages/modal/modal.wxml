@@ -1,0 +1,13 @@
+<block wx:if="{{$taroCompReady}}">
+    <view class="modal-container" hidden="{{!shown}}">
+        <view class="modal">
+            <view class="title">{{detail.title}}</view>
+            <view class="content">{{detail.content}}</view>
+            <view class="btns">
+                <button bindtap="funPrivateKYxij">Confirm</button>
+                <button bindtap="funPrivateIyRdG">Cancel</button>
+                <button bindtap="anonymousFunc0">Close</button>
+            </view>
+        </view>
+    </view>
+</block>

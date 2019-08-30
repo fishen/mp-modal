@@ -1,0 +1,5 @@
+<button type="default" bindtap="showModal" >Open Modal</button>
+<button type="default" bindtap="showModal1" >Open Modal1</button>
+
+<modal shown="{{visible}}" detail="{{detail}}" bindconfirm="onModalConfirm" bindcancel="onModalCancel" bindclose="onModalClose"></modal>
+<modal shown="{{modal.visible}}" detail="{{modal.data}}" bindconfirm="modalSuccess" bindcancel="modalFail" bindclose="modalFail"></modal>
