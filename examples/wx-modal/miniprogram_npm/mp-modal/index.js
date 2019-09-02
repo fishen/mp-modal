@@ -4,7 +4,7 @@ var __DEFINE__ = function(modId, func, req) { var m = { exports: {} }; __MODS__[
 var __REQUIRE__ = function(modId, source) { if(!__MODS__[modId]) return require(source); if(!__MODS__[modId].status) { var m = { exports: {} }; __MODS__[modId].status = 1; __MODS__[modId].func(__MODS__[modId].req, m, m.exports); if(typeof m.exports === "object") { __MODS__[modId].m.exports.__proto__ = m.exports.__proto__; Object.keys(m.exports).forEach(function(k) { __MODS__[modId].m.exports[k] = m.exports[k]; Object.defineProperty(m.exports, k, { set: function(val) { __MODS__[modId].m.exports[k] = val; }, get: function() { return __MODS__[modId].m.exports[k]; } }); }); if(m.exports.__esModule) Object.defineProperty(__MODS__[modId].m.exports, "__esModule", { value: true }); } else { __MODS__[modId].m.exports = m.exports; } } return __MODS__[modId].m.exports; };
 var __REQUIRE_WILDCARD__ = function(obj) { if(obj && obj.__esModule) { return obj; } else { var newObj = {}; if(obj != null) { for(var k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) newObj[k] = obj[k]; } } newObj.default = obj; return newObj; } };
 var __REQUIRE_DEFAULT__ = function(obj) { return obj && obj.__esModule ? obj.default : obj; };
-__DEFINE__(1567170648467, function(require, module, exports) {
+__DEFINE__(1567406020419, function(require, module, exports) {
 (function(e, a) { for(var i in a) e[i] = a[i]; }(exports, /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -149,9 +149,7 @@ var Modal = /** @class */ (function () {
          * Get the modal box display status
          */
         get: function () {
-            var _a = this.options, target = _a.target, name = _a.name, provider = _a.provider;
-            var modalData = provider.getData.call(target, name);
-            return modalData && modalData.visible;
+            return this.getData("visible");
         },
         enumerable: true,
         configurable: true
@@ -161,9 +159,7 @@ var Modal = /** @class */ (function () {
          * Get the binding data by the modal box
          */
         get: function () {
-            var _a = this.options, target = _a.target, name = _a.name, provider = _a.provider;
-            var modalData = provider.getData.call(target, name);
-            return modalData && modalData.data;
+            return this.getData("data");
         },
         enumerable: true,
         configurable: true
@@ -193,7 +189,16 @@ var Modal = /** @class */ (function () {
         configurable: true
     });
     /**
-     * Bind this argument with page or component object.
+     * Get modal data with specific key.
+     * @param key the key of modal data.
+     */
+    Modal.prototype.getData = function (key) {
+        var _a = this.options, target = _a.target, name = _a.name;
+        var modalData = Modal.provider.getData.call(target, name);
+        return modalData && modalData[key];
+    };
+    /**
+     * Bind this argument with page or component object for current modal.
      * @param thisArg page or component object.
      * @example
      * const modal=new Modal({target: someObj})
@@ -210,13 +215,13 @@ var Modal = /** @class */ (function () {
     };
     /**
      * Show modal.
-     * @param data modal data.
+     * @param data modal data to set.
      * @param extra extra object data to set.
      */
     Modal.prototype.show = function (data, extra) {
         var _a;
         var _this = this;
-        var _b = this.options, target = _b.target, provider = _b.provider, successKey = _b.successKey, failKey = _b.failKey, name = _b.name, selfClosing = _b.selfClosing;
+        var _b = this.options, target = _b.target, successKey = _b.successKey, failKey = _b.failKey, name = _b.name, selfClosing = _b.selfClosing;
         if (!target) {
             throw new Error("Please bind this argument by bind method first.");
         }
@@ -224,7 +229,7 @@ var Modal = /** @class */ (function () {
             target[successKey] = resolve;
             target[failKey] = reject;
         });
-        provider.setData.call(target, __assign((_a = {}, _a[name] = { visible: true, data: data }, _a), (util_1.isObj(extra) && extra != null ? extra : {})));
+        Modal.provider.setData.call(target, __assign((_a = {}, _a[name] = { visible: true, data: data }, _a), (util_1.isObj(extra) && extra != null ? extra : {})));
         if (selfClosing) {
             promise = promise.finally(function () { return _this.hide(); });
         }
@@ -235,13 +240,43 @@ var Modal = /** @class */ (function () {
      */
     Modal.prototype.hide = function () {
         var _a;
-        var _b = this.options, name = _b.name, provider = _b.provider, target = _b.target;
+        var _b = this.options, name = _b.name, target = _b.target;
         var tmpData = (_a = {}, _a[name] = { visible: false }, _a);
-        provider.setData.call(target, tmpData);
+        Modal.provider.setData.call(target, tmpData);
     };
+    /**
+     * The global system service provider
+     */
+    Modal.provider = provider_1.defaultProvider;
     return Modal;
 }());
 exports.Modal = Modal;
+/**
+ * Create a Modal instance through the decorator.
+ * @param options modal options.
+ */
+function modal(options) {
+    return function (target, name) {
+        var method = Modal.provider.modalBindMethod;
+        method = util_1.isFn(method) ? method() : method;
+        if (!util_1.isStr(method)) {
+            throw new TypeError("The \"modalBindMethod\" member of provider is required.");
+        }
+        var original = target[method];
+        target[name] = new Modal(Object.assign({ name: name }, options));
+        target[method] = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            this[name].bind(this);
+            if (util_1.isFn(original)) {
+                return original.apply(this, args);
+            }
+        };
+    };
+}
+exports.modal = modal;
 
 
 /***/ }),
@@ -249,7 +284,7 @@ exports.Modal = Modal;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-
+/* WEBPACK VAR INJECTION */(function(global) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var util_1 = __webpack_require__(0);
 exports.defaultProvider = {
@@ -267,13 +302,48 @@ exports.defaultProvider = {
             return data[key];
         }
     },
+    modalBindMethod: function () {
+        if (global && global.$gaic) {
+            return "componentWillMount";
+        }
+        else {
+            return "onReady";
+        }
+    },
 };
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(3)))
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
 
 
 /***/ })
 /******/ ])));
 //# sourceMappingURL=index.js.map
 }, function(modId) {var map = {}; return __REQUIRE__(map[modId], modId); })
-return __REQUIRE__(1567170648467);
+return __REQUIRE__(1567406020419);
 })()
 //# sourceMappingURL=index.js.map

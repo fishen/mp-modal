@@ -76,13 +76,13 @@ var Modal = (_temp2 = _class = function (_BaseComponent) {
       return this.__state;
     }
   }, {
-    key: "funPrivateKYxij",
-    value: function funPrivateKYxij() {
+    key: "funPrivateJFsdG",
+    value: function funPrivateJFsdG() {
       return this.props.onConfirm.apply(undefined, Array.prototype.slice.call(arguments, 1));
     }
   }, {
-    key: "funPrivateIyRdG",
-    value: function funPrivateIyRdG() {
+    key: "funPrivateLXtUd",
+    value: function funPrivateLXtUd() {
       return this.props.onCancel.apply(undefined, Array.prototype.slice.call(arguments, 1));
     }
   }, {
@@ -93,7 +93,7 @@ var Modal = (_temp2 = _class = function (_BaseComponent) {
   }]);
 
   return Modal;
-}(_index.Component), _class.$$events = ["funPrivateKYxij", "funPrivateIyRdG", "anonymousFunc0"], _class.$$componentPath = "pages/modal/modal", _temp2);
+}(_index.Component), _class.$$events = ["funPrivateJFsdG", "funPrivateLXtUd", "anonymousFunc0"], _class.$$componentPath = "pages/modal/modal", _temp2);
 exports.default = Modal;
 
 Component(require('../../npm/@tarojs/taro-weapp/index.js').default.createComponent(Modal));

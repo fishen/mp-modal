@@ -4,8 +4,8 @@
             <view class="title">{{detail.title}}</view>
             <view class="content">{{detail.content}}</view>
             <view class="btns">
-                <button bindtap="funPrivateKYxij">Confirm</button>
-                <button bindtap="funPrivateIyRdG">Cancel</button>
+                <button bindtap="funPrivateJFsdG">Confirm</button>
+                <button bindtap="funPrivateLXtUd">Cancel</button>
                 <button bindtap="anonymousFunc0">Close</button>
             </view>
         </view>

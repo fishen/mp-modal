@@ -1,4 +1,4 @@
-import { isObj, isStr } from "./util";
+import { isFn, isObj, isStr } from "./util";
 
 import { defaultProvider, IModalProvider } from "./provider";
 
@@ -14,13 +14,6 @@ export interface IModalData<T = any> {
 }
 
 export interface IModalOptions {
-    /**
-     * The system service provider
-     */
-    provider?: IModalProvider;
-    /**
-     * The name for setting modal data.
-     */
     name?: string | symbol;
     /**
      * Whether to automatically close the modal, after calling the any callback function(success or fail).
@@ -45,17 +38,13 @@ export class Modal<T = any> {
      * Get the modal box display status
      */
     public get visible(): boolean {
-        const { target, name, provider } = this.options;
-        const modalData: IModalData = provider.getData.call(target, name);
-        return modalData && modalData.visible;
+        return this.getData("visible");
     }
     /**
      * Get the binding data by the modal box
      */
     public get data(): T {
-        const { target, name, provider } = this.options;
-        const modalData: IModalData = provider.getData.call(target, name);
-        return modalData && modalData.data;
+        return this.getData("data");
     }
     /**
      * Get the registered success callback function.
@@ -73,6 +62,10 @@ export class Modal<T = any> {
         const { target, failKey } = this.options;
         return target && target[failKey];
     }
+    /**
+     * The global system service provider
+     */
+    public static provider: IModalProvider = defaultProvider;
     protected options: IModalOptions;
     constructor(options?: IModalOptions) {
         const { name } = Object.assign({}, options);
@@ -86,7 +79,16 @@ export class Modal<T = any> {
         }, options);
     }
     /**
-     * Bind this argument with page or component object.
+     * Get modal data with specific key.
+     * @param key the key of modal data.
+     */
+    public getData(key: keyof IModalData<T>): any {
+        const { target, name } = this.options;
+        const modalData: IModalData = Modal.provider.getData.call(target, name);
+        return modalData && modalData[key];
+    }
+    /**
+     * Bind this argument with page or component object for current modal.
      * @param thisArg page or component object.
      * @example
      * const modal=new Modal({target: someObj})
@@ -103,17 +105,17 @@ export class Modal<T = any> {
     }
     /**
      * Show modal.
-     * @param data modal data.
+     * @param data modal data to set.
      * @param extra extra object data to set.
      */
     public show(data?: T, extra?: object): Promise<any> {
-        const { target, provider, successKey, failKey, name, selfClosing } = this.options;
+        const { target, successKey, failKey, name, selfClosing } = this.options;
         if (!target) { throw new Error("Please bind this argument by bind method first."); }
         let promise = new Promise((resolve, reject) => {
             target[successKey] = resolve;
             target[failKey] = reject;
         });
-        provider.setData.call(target, {
+        Modal.provider.setData.call(target, {
             [name]: { visible: true, data },
             ...(isObj(extra) && extra != null ? extra : {}),
         });
@@ -126,8 +128,26 @@ export class Modal<T = any> {
      * Hide modal
      */
     public hide() {
-        const { name, provider, target } = this.options;
+        const { name, target } = this.options;
         const tmpData = { [name]: { visible: false } };
-        provider.setData.call(target, tmpData);
+        Modal.provider.setData.call(target, tmpData);
     }
+}
+
+/**
+ * Create a Modal instance through the decorator.
+ * @param options modal options.
+ */
+export function modal(options?: Omit<IModalOptions, "target">) {
+    return function(target: any, name: string) {
+        let method = Modal.provider.modalBindMethod;
+        method = isFn(method) ? (method as any)() : method;
+        if (!isStr(method)) { throw new TypeError(`The "modalBindMethod" member of provider is required.`); }
+        const original = target[method as string];
+        target[name] = new Modal(Object.assign({ name }, options));
+        target[method as string] = function(...args: any[]) {
+            this[name].bind(this);
+            if (isFn(original)) { return original.apply(this, args); }
+        };
+    };
 }

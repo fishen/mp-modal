@@ -1,5 +1,5 @@
 # mp-modal
-A helper cross-platform tool for muti-miniprograms that can more convenient to use modal components.
+A helper cross-platform tool for miniprograms that can more convenient to use modal components.
 
 # Installation
 
@@ -7,6 +7,8 @@ A helper cross-platform tool for muti-miniprograms that can more convenient to u
 
 # Getting started
 ## Traditional way(no mp-modal)
+
+>For more modal component details, please see the [example](https://github.com/fishen/mp-modal/tree/master/examples/wx-modal/modal)
 
 ```
 // pages/index/index.js
@@ -63,6 +65,7 @@ Page({
 <modal shown="{{modal.visible}}" detail="{{modal.data}}" bindconfirm="modalSuccess" bindcancel="modalFail" bindclose="modalFail"></modal>
 ```
 ## Use mp-modal with taro
+>For more MyModal component details, please see the [example](https://github.com/fishen/mp-modal/tree/master/examples/taro-modal)
 ```
 import { Component } from '@tarojs/taro'
 import { View, Button } from '@tarojs/components'
@@ -75,8 +78,7 @@ const modal = new Modal();
 export default class Index extends Component {
 
   showModal() {
-    modal.bind(this)
-      .show({
+    modal.bind(this).show({
         title: 'modal title',
         content: 'modal content'
       })
@@ -97,194 +99,205 @@ export default class Index extends Component {
 # API
 ## constructor(options?: object)
 The modal constructor.
+>In a native miniprogram application, the *name* option must be set and must be a string type of data.
 * **options**(optional): modal options.
 * * **provider**(optional, object): The system service provider, created automatically by default.
 * * * **setData**((data: any, cb?: Function)=>void): Set data from thisArg(page or component object), use *setData* or *setState* by default.
 * * * **getData**((key: string)=>any): Get data from thisArg(page or component object), get from *data* or *state* by default.
-* * **name**(optional, string): Modal name which must be set in the native miniprogram.
-* * **selfClosing**(optional, boolean): Whether to automatically close the modal, after calling the any callback function(success or fail).
+* * **name**(optional, string): The modal name which must be set in the native miniprogram used to get modal's data.
+* * **selfClosing**(optional, boolean): Whether to automatically close the modal, after calling the any callback function(success or fail), default is `true`.
 * * **target**(optional, object): The page or component object.
-* * **successKey**(optional, string): The success callback function's name for binding.
-* * **failKey**(optional, string): The failure callback function's name for binding.
+* * **successKey**(optional, string): The success callback function's name for binding. The default value is `${name}Success` when the name option is set to a string, in addition, the default value is `Symbol()`.
+* * **failKey**(optional, string): The failure callback function's name for binding. The default value is `${name}Fail` when the name option is set to a string, in addition, the default value is `Symbol()`.
 ```
-import { i18n } from 'mp-modal';
+import { Modal } from 'mp-modal';
 
-const baseUrl = 'https://raw.githubusercontent.com/fishen/assets/master/wx-i18n';
-const version = '1.0.0';
-i18n.config({
-  lang: 'zh',
-  debug: true,
-  indexUrl: () => `${baseUrl}/${version}/index.json`,
-  textsUrl: (hash) => `${baseUrl}/${version}/${hash}.json`
+const modal = new Modal({ name: 'myModal' });
+
+Page({
+  onRead(){
+    modal.bind(this);
+  },
+  showModal(){
+    modal.show();
+  }
+})
+
+<modal shown="{{modal.visible}}" bindconfirm="myModalSuccess" bindcancel="myModalFail"/>
+```
+## bind(target: object): void;
+Bind this argument(page or component object) for current modal. You must bind a page or component object for current modal **before calling the show** method.
+```
+import { Modal } from 'mp-modal';
+
+const modal=new Modal({name:'myModal'});
+
+Page({
+  onRead(){
+    modal.bind(this);
+  },
+  showModal(){
+    modal.show();
+  }
+})
+
+```
+or 
+```
+Page({
+  onRead(){
+    this.modal=new Modal({ target: this });
+  },
+  showModal(){
+    modal.show();
+  }
 })
 ```
-## bind(target: object):void;
-## show(data:any, extra?:object):Promise<any>;
-Format a template string with the specified parameter.
->If the variable matching flag(left and right) contains special characters, please use the character '\\' to escape, such as { left:"\\\\${" }.
-* **template**: the template string.
-* **params**: the parameter object to format template.
-* **options**: formatting options.
-* * **left**(optional, string): The variable matching start flag, default is '{'.
-* * **right**(optional, string): The variable matching end flag, default is '}'.
-* * **defaultValue**(optional, string | object): the default value for formatting, default is ''.
+## getData(key: string): any
+Get modal data with specific key.
+* **key**: the key of modal data, the valid values includes 'visible' and 'data'.
 ```
-import { i18n } from 'mp-modal';
+//taro example
 
-i18n.format('hello, {world}!', { world:'fisher' })
-i18n.format('hello, {world}!', {},{ defaultValue:'world' })
-i18n.format('{hello}, {world}!', {},{ defaultValue:{ hello:'hi', world:'world' })
-i18n.format('hello, ${world}!', { world:'fisher' }, { left:"\\${" })
-```
-```
-// output:
-hello, fisher!
-hello, world!
-hi, world!
-hello, fisher!
+const modal=new Modal();
+
+{ modal.getData('visible')&&<MyModal/> }
 ```
 ## hide()
-Get index resource, the index resource request will only be called once between the entire  lifecycle and will be re-requested at the next time the program restart. In addition only one request will be initiated at the same time.
-* **options**: resource options.
-* * **forced**(optional, boolean): whether to require a forced refresh.
+Hide the modal.
+>The show method will invoke method `setData` to bind data `{[name]:{visible:false}}` for current page or component.
+## show(data?: any, extra?: object): Promise\<any>;
+Show modal.
+* **data**: modal data to set.
+* **extra**: extra object data to set.
+>The show method will invoke method `setData` to bind data `{[name]:{data, visible:true},...extra}` for current page or component.
 ```
-import { i18n } from 'mp-modal';
+import { Modal } from 'mp-modal';
+
+const modal=new Modal({name: 'myModal'});
 
 Page({
-  onLoad(){
-    i18n.getIndex().then(console.log);
+  showModal(){
+    modal.bind(this)
+    .show()
+    .then(e=>{}) // success callback function
+    .catch(err=>{}); // fail callback function
   }
 })
-```
-```
-{ "pages/index/index":"d41d8cd98f00b204e9800998ecf8427e" }
-```
-## getTexts( options?: object )
-Get original i18n resources for the corresponding page or componet (default is current page).
-* **options**: resource options.
-* * **path**(optional, string): the resource(page or component) path, default get current path by 'getCurrentPages'.
-* * **texts**(optional, object): local texts resource, if not set, it will fetch from the remote.
-```
-import { i18n } from 'mp-modal';
 
-Page({
-  onLoad(){
-    i18n.getTexts().then(console.log);
+<modal shown="{{modal.visible}}" bindconfirm="myModalSuccess" bindcancel="myModalFail"/>
+```
+# Getters
+The getters can be easily used in the taro framework.
+## data: any
+Get the binding data by the modal box, in the native program, you can get it by `${name}.data`.
+```
+//taro
+const modal = new Modal();
+<MyModal detail={modal.data} />
+//native miniprogram
+const modal=new Modal({name:'myModal'});
+<my-modal data="{{myModal.data}}"/>
+```
+## fail: function
+Get the registered failure function, in the native program, you can get it by `${name}Fail` by default.
+```
+//taro
+const modal = new Modal();
+<MyModal onFail={modal.fail} />
+//native miniprogram
+const modal=new Modal({name:'myModal'});
+<my-modal bindfail="myModalFail"/>
+```
+## success: function
+Get the registered success callback function, in the native program, you can get it by `${name}Success` by default.
+```
+//taro
+const modal = new Modal();
+<MyModal onFail={modal.success} />
+//native miniprogram
+const modal=new Modal({name:'myModal'});
+<my-modal bindsuccess="myModalSuccess"/>
+```
+## visible: boolean
+Get the modal box display status, in the native program, you can get it by `${name}.visible`.
+```
+//taro
+const modal = new Modal();
+<MyModal detail={modal.visible} />
+//native miniprogram
+const modal=new Modal({name:'myModal'});
+<my-modal wx:if="{{myModal.visible}}"/>
+```
+# Decorators
+## modal(options?: object)
+Create a Modal instance through the decorator. By default, the bind method is called automatically when the page is initialized. You can determine which method to initialize in by configuring the `modalBindMethod` option in the provider. The default is `componentWillMount`(in taro) or `onReady`.
+>The modal decorator will set the modal name property to the current decoration attribute name.
+```
+// taro example
+import Taro, { Component } from '@tarojs/taro'
+import { View, Button } from '@tarojs/components'
+import MyModal from '../modal/modal';
+
+export default class Index extends Component {
+
+  @modal()
+  modal2: Modal;
+
+  showModal(){
+    this.modal2.show().then(console.log).catch(console.error);
   }
-})
-```
-```
-{
-  "zh":{"hello":"你好","world":"世界","welcome":"{hello}，{world}。"},
-  "en":{"hello":"Hello","world":"World","welcome":"{hello}, {world}."}
+
+  render(){
+    const { visible, data, success, fail } = this.modal2;
+    return (
+      <View className='index'>
+        <Button type="default" onClick={this.showModal2.bind(this)} >Open Modal2</Button>
+        <MyModal shown={visible} detail={data} onConfirm={success} onCancel={fail} onClose={fail} />
+      </View >
+    )
+  }
 }
-```
-## language
-Get or set current language.
-## load( thisArg: any, options?: object )
-Load curennt language's resources and bind to the corresponding page or componet (default is current page).
-* **thisArg**: page or component object.
-* **options**: load options.
-* * **path**(optional, string): the resource(page or component) path, default get current path by 'getCurrentPages'.
-* * **texts**(optional, object): local texts resource, if not set, it will fetch from the remote.
-* * **tempVar**(optional, string): variable name used in the template, default is '$t'.
-* * **langVar**(optional, string): current language variable name, default is '$lang'.
-```
-import { i18n } from 'mp-modal';
-
-Page({
-  onLoad(){
-    //local mode
-    const texts={ zh: { hi: '嗨' }, en: { hi: 'Hi' } };
-    i18n.load(this, { texts }).then(console.log)
-    //remote mode
-    i18n.load(this).then(console.log);
-  }
-})
-
-<view>current language is {{$lang}}</view>
-<view>{{$t.hello}}</view>
-```
-```
-{hi: "嗨"}
-{hello: "你好", world: "世界", welcome: "{hello}，{world}。"}
-
-current language is zh
-你好
-```
-## mergetTexts(texts: object, lang?: string)
-Merge texts by specified or current language.
-* **texts**: the multi-language texts.
-* **lang**: the specified language, default use current language.
-```
-import { i18n } from 'mp-modal';
-
-i18n.mergetTexts({ zh: { hi:'你好' }, en: { hi:'Hi' } },'en'); 
-```
-```
-{ hi:'Hi' }
 ```
 # Customize
 ## API provider
-By default, provider is automatically created based on the environment. If you want to change the default behavior, set the provider option when calling the config method.
-> You can create a custom provider more easily by inheriting the **DefaultProvider**.
+By default, provider is automatically created based on the environment. If you want to change the default behavior, set the `provider` option as a static property of Modal class.
 ```
-import { i18n } from 'mp-modal';
+import { Modal } from 'mp-modal';
 
-class MyProvider{
-    request(params){
-      // set headers and other operations
-    },
-    getStorage(params){},
-    ...others
+//default configuration for taro
+Modal.provider={
+  modalBindMethod: 'componentWillMount',
+  setData: function(data, cb){ this.setState(data,cb); },
+  getData: function(key){ return this.state[key] }
 }
 
-i18n.config({
-  provider: new MyProvider();
-  ...others
-})
 ```
 For the complete provider definition, please refer to the following interface.
 ```
-export interface IProvider {
-    getSetData(p: any): (data: any, callback?: () => void) => void;
-    request(params: { url: string }): Promise<{ data: any, statusCode: number, header: object }>;
-    getStorageInfo(): Promise<{ keys: string[] }>;
-    removeStorage(params: { key: string }): Promise<any>;
-    setStorage(params: { key: string, data: any }): Promise<any>;
-    getStorage(params: { key: string }): Promise<{ data: any }>;
-    getStorageSync(key: string): any;
-    getCurrentPages(): [{ route: string }];
+export interface IModalProvider {
+    /**
+     * The lifecycle function to bind modals when use decorator modal.
+     * default is componentWillMount or onReady
+     */
+    modalBindMethod: string | (() => string);
+    /**
+     * the function to set modal data for current page or component.
+     * default use this.setData or this.setState
+     */
+    setData(data: any, cb?: (...args: any[]) => any): void;
+    /**
+     * the function to get modal data from current page or component.
+     * defaut get value from this.data or this.state
+     */
+    getData(key: string): any;
 }
 ```
-# Resource structure required
-## Index file
-The file includes all path and version(hash value) info.
-```
-{
-  [page or component path]:[text resource hash value],
-  "pages/home/home":"84b7f497e34e10725c4dfdf389e092b8",
-  "pages/log/log":"30c481699e53cfc6b490be924ce7f4b8"
-}
-```
-## Resource file
-The file include multi-language text resources
-```
-{
-  [lang]: {
-    [key] : [value]
-  },
-  "zh": {
-    "hello":"你好",
-    "world":"世界",
-    "welcome":"{hello}，{world}。"
-  },
-  "en": {
-    "hello" : "Hello",
-    "world" : "World",
-    "welcome":"{hello}, {world}."
-  }
-}
-```
+# Also see
+[mp-event](https://www.npmjs.com/package/mp-event): a simple event subscription publishing system implementation;
 
+[mp-i18n](https://www.npmjs.com/package/mp-i18n): a cross-platform i18n library for muti-miniprograms (wx、alipay、baidu、tt);
 
+[mp-mem](https://www.npmjs.com/package/mp-mem): a lightweight memoize library that can be used on both normal functions and class methods;
+
+[auto-mapping](https://www.npmjs.com/package/auto-mapping): map and convert objects automatically in typescript;
