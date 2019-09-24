@@ -13,12 +13,12 @@
     "lib": [
       "dom",
       "es6",
-      "es2018.promise",
+      "es2018.promise"
     ]
   },
   "include": [
     "src/**/*.ts",
-    "utils/**/*.ts",
+    "utils/**/*.ts"
   ],
   "exclude": [
     "typings",

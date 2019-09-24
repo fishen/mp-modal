@@ -1,6 +1,6 @@
 {
   "name": "mp-modal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A helper cross-platform tool for muti-miniprograms that can more convenient to use modal components.",
   "main": "index.js",
   "scripts": {
