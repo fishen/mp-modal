@@ -1,3 +1,29 @@
+<!-- TOC -->
+
+- [mp-modal](#mp-modal)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+    - [Traditional way(no mp-modal)](#traditional-wayno-mp-modal)
+    - [With mp-modal](#with-mp-modal)
+    - [Use mp-modal with taro](#use-mp-modal-with-taro)
+- [API](#api)
+    - [constructor(options?: object)](#constructoroptions-object)
+    - [bind(target: object): void;](#bindtarget-object-void)
+    - [getData(key: string): any](#getdatakey-string-any)
+    - [hide()](#hide)
+    - [show(data?: any, extra?: object): Promise\<any>;](#showdata-any-extra-object-promise\any)
+- [Getters](#getters)
+    - [data: any](#data-any)
+    - [fail: function](#fail-function)
+    - [success: function](#success-function)
+    - [visible: boolean](#visible-boolean)
+- [Decorators](#decorators)
+    - [modal(options?: object)](#modaloptions-object)
+- [Customize](#customize)
+    - [API provider](#api-provider)
+- [Also see](#also-see)
+
+<!-- /TOC -->
 # mp-modal
 A helper cross-platform tool for miniprograms that can more convenient to use modal components.
 
@@ -10,7 +36,7 @@ A helper cross-platform tool for miniprograms that can more convenient to use mo
 
 >For more modal component details, please see the [example](https://github.com/fishen/mp-modal/tree/master/examples/wx-modal/modal)
 
-```
+```js
 // pages/index/index.js
 
 Page({
@@ -36,13 +62,14 @@ Page({
   },
 })
 
-// page/index/index.wxss
+```
+```xml
+<!--page/index/index.wxss-->
 <button type="default" bindtap="showModal" >Open Modal</button>
-
 <modal shown="{{visible}}" detail="{{detail}}" bindconfirm="onModalConfirm" bindcancel="onModalCancel" bindclose="onModalCancel"></modal>
 ```
 ## With mp-modal
-```
+```js
 //pages/index/index.js
 import { Modal } from 'mp-modal';
 
@@ -58,15 +85,15 @@ Page({
       .catch(e => console.error(e));
   }
 })
-
-//pages/index/index.wxml
+```
+```xml
+<!--pages/index/index.wxml-->
 <button type="default" bindtap="showModal" >Open Modal</button>
-
 <modal shown="{{modal.visible}}" detail="{{modal.data}}" bindconfirm="modalSuccess" bindcancel="modalFail" bindclose="modalFail"></modal>
 ```
 ## Use mp-modal with taro
 >For more MyModal component details, please see the [example](https://github.com/fishen/mp-modal/tree/master/examples/taro-modal)
-```
+```js
 import { Component } from '@tarojs/taro'
 import { View, Button } from '@tarojs/components'
 import MyModal from '../modal/modal';
@@ -109,7 +136,7 @@ The modal constructor.
 * * **target**(optional, object): The page or component object.
 * * **successKey**(optional, string): The success callback function's name for binding. The default value is `${name}Success` when the name option is set to a string, in addition, the default value is `Symbol()`.
 * * **failKey**(optional, string): The failure callback function's name for binding. The default value is `${name}Fail` when the name option is set to a string, in addition, the default value is `Symbol()`.
-```
+```js
 import { Modal } from 'mp-modal';
 
 const modal = new Modal({ name: 'myModal' });
@@ -127,7 +154,7 @@ Page({
 ```
 ## bind(target: object): void;
 Bind this argument(page or component object) for current modal. You must bind a page or component object for current modal **before calling the show** method.
-```
+```js
 import { Modal } from 'mp-modal';
 
 const modal=new Modal({name:'myModal'});
@@ -143,20 +170,20 @@ Page({
 
 ```
 or 
-```
+```js
 Page({
   onRead(){
     this.modal=new Modal({ target: this });
   },
   showModal(){
-    modal.show();
+    this.modal.show();
   }
 })
 ```
 ## getData(key: string): any
 Get modal data with specific key.
 * **key**: the key of modal data, the valid values includes 'visible' and 'data'.
-```
+```js
 //taro example
 
 const modal=new Modal();
@@ -171,7 +198,7 @@ Show modal.
 * **data**: modal data to set.
 * **extra**: extra object data to set.
 >The show method will invoke method `setData` to bind data `{[name]:{data, visible:true},...extra}` for current page or component.
-```
+```js
 import { Modal } from 'mp-modal';
 
 const modal=new Modal({name: 'myModal'});
@@ -191,7 +218,7 @@ Page({
 The getters can be easily used in the taro framework.
 ## data: any
 Get the binding data by the modal box, in the native program, you can get it by `${name}.data`.
-```
+```js
 //taro
 const modal = new Modal();
 <MyModal detail={modal.data} />
@@ -201,17 +228,19 @@ const modal=new Modal({name:'myModal'});
 ```
 ## fail: function
 Get the registered failure function, in the native program, you can get it by `${name}Fail` by default.
-```
+```js
 //taro
 const modal = new Modal();
+```
+```xml
 <MyModal onFail={modal.fail} />
-//native miniprogram
+<!--native miniprogram-->
 const modal=new Modal({name:'myModal'});
 <my-modal bindfail="myModalFail"/>
 ```
 ## success: function
 Get the registered success callback function, in the native program, you can get it by `${name}Success` by default.
-```
+```js
 //taro
 const modal = new Modal();
 <MyModal onFail={modal.success} />
@@ -221,7 +250,7 @@ const modal=new Modal({name:'myModal'});
 ```
 ## visible: boolean
 Get the modal box display status, in the native program, you can get it by `${name}.visible`.
-```
+```js
 //taro
 const modal = new Modal();
 <MyModal detail={modal.visible} />
@@ -231,9 +260,9 @@ const modal=new Modal({name:'myModal'});
 ```
 # Decorators
 ## modal(options?: object)
-Create a Modal instance through the decorator. By default, the bind method is called automatically when the page is initialized. You can determine which method to initialize in by configuring the `modalBindMethod` option in the provider. The default is `componentWillMount`(in taro) or `onReady`.
+Create a Modal instance through the decorator. By default, the bind method is called automatically when the page is initialized. You can determine which method to initialize in by configuring the `modalBindMethod` option in the provider. The default is `componentWillMount`(in taro) or `onReady`(in native miniprogram).
 >The modal decorator will set the modal name property to the current decoration attribute name.
-```
+```js
 // taro example
 import Taro, { Component } from '@tarojs/taro'
 import { View, Button } from '@tarojs/components'
@@ -262,7 +291,7 @@ export default class Index extends Component {
 # Customize
 ## API provider
 By default, provider is automatically created based on the environment. If you want to change the default behavior, set the `provider` option as a static property of Modal class.
-```
+```js
 import { Modal } from 'mp-modal';
 
 //default configuration for taro
@@ -274,7 +303,7 @@ Modal.provider={
 
 ```
 For the complete provider definition, please refer to the following interface.
-```
+```js
 export interface IModalProvider {
     /**
      * The lifecycle function to bind modals when use decorator modal.
