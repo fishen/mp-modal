@@ -7,11 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "fix": "tslint -c tslint.json 'src/**/*.ts' --fix",
-    "dts": "gulp dts",
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
     "build": "npm run type-check&&npm run fix&&webpack",
-    "pack": "npm run build&&npm run dts&&npm pack"
+    "pack": "npm run build&&npm pack"
   },
   "keywords": [
     "miniprogram",
@@ -29,14 +28,14 @@
     "url": "https://github.com/fishen/mp-modal.git"
   },
   "devDependencies": {
-    "bundle-dts": "^1.0.4",
-    "gulp": "^4.0.2",
-    "ts-loader": "^6.0.4",
-    "ts-node": "^8.3.0",
-    "tslint": "^5.18.0",
-    "typescript": "^3.5.3",
-    "webpack": "^4.35.3",
-    "webpack-cli": "^3.3.6",
+    "bundle-dts": "^1.1.1",
+    "ts-loader": "^6.2.1",
+    "ts-node": "^8.5.4",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.3",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
     "webpack-node-externals": "^1.7.2"
-  }
+  },
+  "dependencies": {}
 }
