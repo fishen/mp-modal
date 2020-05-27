@@ -171,7 +171,7 @@ var Modal = /** @class */ (function () {
      *
      */
     Modal.prototype.fail = function () {
-        var key = this.get('success');
+        var key = this.get('fail');
         if (!key)
             return;
         var target = this.target();

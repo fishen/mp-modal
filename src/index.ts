@@ -85,7 +85,7 @@ export class Modal<T = any> {
      *
      */
     public fail() {
-        const key = this.get('success');
+        const key = this.get('fail');
         if (!key) return;
         const target = this.target();
         return target[key] && target[key].bind(target);
