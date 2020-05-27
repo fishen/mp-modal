@@ -5,6 +5,8 @@
     ],
     "jsRules": {},
     "rules": {
+        "ban-types": false,
+        "variable-name": false,
         "no-console": false,
         "only-arrow-functions": false,
         "forin": false

@@ -81,32 +81,11 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function isFn(fn) {
-    return typeof fn === "function";
-}
-exports.isFn = isFn;
-function isObj(obj) {
-    return typeof obj === "object";
-}
-exports.isObj = isObj;
-function isStr(str) {
-    return typeof str === "string";
-}
-exports.isStr = isStr;
-
-
-/***/ }),
-/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -123,214 +102,202 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var util_1 = __webpack_require__(0);
-var provider_1 = __webpack_require__(2);
+exports.Modal = void 0;
+var util_1 = __webpack_require__(1);
 var Modal = /** @class */ (function () {
     function Modal(options) {
-        var name = Object.assign({}, options).name;
-        var traditional = util_1.isStr(name);
-        this.options = Object.assign({
-            failKey: traditional ? String(name) + "Fail" : Symbol(),
-            name: Symbol(),
-            provider: provider_1.defaultProvider,
-            selfClosing: true,
-            successKey: traditional ? String(name) + "Success" : Symbol(),
-        }, options);
+        if (options === void 0) { options = {}; }
+        this.options = Object.assign({ selfClosing: true }, options);
     }
-    Object.defineProperty(Modal.prototype, "visible", {
-        /**
-         * Get the modal box display status
-         */
-        get: function () {
-            return this.getData("visible");
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Modal.prototype, "data", {
-        /**
-         * Get the binding data by the modal box
-         */
-        get: function () {
-            return this.getData("data");
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Modal.prototype, "success", {
-        /**
-         * Get the registered success callback function.
-         * It is generally used for the callback function of operation success, confirmation and other operations.
-         */
-        get: function () {
-            var _a = this.options, target = _a.target, successKey = _a.successKey;
-            return target && target[successKey];
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Modal.prototype, "fail", {
-        /**
-         * Get the registered failure function.
-         * It can be a callback function for operations such as error handling, closing, and canceling events.
-         */
-        get: function () {
-            var _a = this.options, target = _a.target, failKey = _a.failKey;
-            return target && target[failKey];
-        },
-        enumerable: true,
-        configurable: true
-    });
     /**
-     * Get modal data with specific key.
-     * @param key the key of modal data.
+     * Get modal visible status in data used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return {this.modal.visible()&&(<View></View>)}
+     *      }
+     * }
+     *
      */
-    Modal.prototype.getData = function (key) {
-        var _a = this.options, target = _a.target, name = _a.name;
-        var modalData = Modal.provider.getData.call(target, name);
-        return modalData && modalData[key];
+    Modal.prototype.visible = function () {
+        return this.get('visible');
+    };
+    /**
+     * Get modal data in data used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return <MyComonent props={this.modal.data()}></MyComonent>
+     *      }
+     * }
+     *
+     */
+    Modal.prototype.data = function () {
+        return this.get('data');
+    };
+    /**
+     * Get modal success callback used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return <MyComonent onSuccess={this.modal.success()}></MyComonent>
+     *      }
+     * }
+     *
+     */
+    Modal.prototype.success = function () {
+        var key = this.get('success');
+        if (!key)
+            return;
+        var target = this.target();
+        return target[key] && target[key].bind(target);
+    };
+    /**
+     * Get modal fail callback used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return <MyComonent onFail={this.modal.fail()}></MyComonent>
+     *      }
+     * }
+     *
+     */
+    Modal.prototype.fail = function () {
+        var key = this.get('success');
+        if (!key)
+            return;
+        var target = this.target();
+        return target[key] && target[key].bind(target);
+    };
+    Modal.prototype.get = function (key) {
+        var _this = this;
+        if (!this.target)
+            return;
+        var target = this.target();
+        var data = [target.data, target.state].find(function (item) { return item && item[_this.options.name]; });
+        return data && data[this.options.name][key];
+    };
+    /**
+     * Bind for all modals in thisArg, the modal name will be set to it's property name if it's name is missing.
+     * @param thisArg
+     * @example
+     *
+     * Page({
+     *      modal1:new Modal({ name:'modal1' });
+     *      modal2:new Modal({ name:'modal2' });
+     *      onLoad(){
+     *          Modal.init(this);
+     *      }
+     * })
+     */
+    Modal.init = function (thisArg) {
+        Object.keys(thisArg)
+            .filter(function (key) { return thisArg[key] instanceof Modal; })
+            .forEach(function (key) { return thisArg[key].bind(thisArg, { name: key }); });
     };
     /**
      * Bind this argument with page or component object for current modal.
-     * @param thisArg page or component object.
-     * @example
-     * const modal=new Modal({target: someObj})
      *
-     * equals to
+     * @param thisArg page or component object.
+     * @param options modal options.
+     * @example
      *
      * const modal=new Modal();
-     * modal.bind(someObj);
+     * modal.bind(this);
      */
-    Modal.prototype.bind = function (thisArg) {
-        this.options = this.options || {};
-        this.options.target = thisArg;
+    Modal.prototype.bind = function (thisArg, options) {
+        this.target = function () { return thisArg; };
+        this.options = Object.assign({}, this.options, options);
         return this;
+    };
+    Modal.prototype.setData = function (data) {
+        var target = this.target();
+        var setData = target.setData || target.setState;
+        setData.call(target, data);
     };
     /**
      * Show modal.
+     *
      * @param data modal data to set.
      * @param extra extra object data to set.
+     * @example
+     *
+     * <button bind:tap="showModal">show modal</button>
+     * <my-modal wx:if="{{modal.visible}}" props="{{modal.data}}" bind:complete="{{modal.success}}" bind:error="{{modal.fail}}"></my-modal>
+     *
+     * import { Modal } from 'mp-modal';
+     *
+     * Page({
+     *      showModal(){
+     *          new Modal({ name:'modal' })
+     *              .bind(this)
+     *              .show({...props})
+     *              .then(()=>console.log('success'))
+     *              .catch(()=>console.log('error'))
+     *      }
+     * })
+     *
      */
     Modal.prototype.show = function (data, extra) {
         var _a;
         var _this = this;
-        var _b = this.options, target = _b.target, successKey = _b.successKey, failKey = _b.failKey, name = _b.name, selfClosing = _b.selfClosing;
-        if (!target) {
-            throw new Error("Please bind this argument by bind method first.");
-        }
+        var target = this.target();
+        var name = this.options.name || 'modal';
+        var success = "$modal_" + name + "_success_key";
+        var fail = "$modal_" + name + "_fail_key";
         var promise = new Promise(function (resolve, reject) {
-            target[successKey] = resolve;
-            target[failKey] = reject;
+            target[success] = resolve;
+            target[fail] = reject;
         });
-        Modal.provider.setData.call(target, __assign((_a = {}, _a[name] = { visible: true, data: data }, _a), (util_1.isObj(extra) && extra != null ? extra : {})));
-        if (selfClosing) {
+        this.setData(__assign((_a = {}, _a[name] = {
+            data: data,
+            fail: fail,
+            success: success,
+            visible: true,
+        }, _a), (util_1.isObj(extra) ? extra : {})));
+        if (this.options.selfClosing) {
             promise = promise.finally(function () { return _this.hide(); });
         }
         return promise;
     };
     /**
      * Hide modal
+     *
+     * @example
+     *
+     * this.modal.hide()
      */
     Modal.prototype.hide = function () {
         var _a;
-        var _b = this.options, name = _b.name, target = _b.target;
-        var tmpData = (_a = {}, _a[name] = { visible: false }, _a);
-        Modal.provider.setData.call(target, tmpData);
+        var name = this.options.name || 'modal';
+        this.setData((_a = {}, _a[name] = { visible: false }, _a));
     };
-    /**
-     * The global system service provider
-     */
-    Modal.provider = provider_1.defaultProvider;
     return Modal;
 }());
 exports.Modal = Modal;
-/**
- * Create a Modal instance through the decorator.
- * @param options modal options.
- */
-function modal(options) {
-    return function (target, name) {
-        var method = Modal.provider.modalBindMethod;
-        method = util_1.isFn(method) ? method() : method;
-        if (!util_1.isStr(method)) {
-            throw new TypeError("The \"modalBindMethod\" member of provider is required.");
-        }
-        var original = target[method];
-        target[name] = new Modal(Object.assign({ name: name }, options));
-        target[method] = function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            this[name].bind(this);
-            if (util_1.isFn(original)) {
-                return original.apply(this, args);
-            }
-        };
-    };
-}
-exports.modal = modal;
 
 
 /***/ }),
-/* 2 */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
+
 Object.defineProperty(exports, "__esModule", { value: true });
-var util_1 = __webpack_require__(0);
-exports.defaultProvider = {
-    setData: function (data, cb) {
-        if (!util_1.isObj(this)) {
-            throw new Error();
-        }
-        var set = this.setData || this.setState;
-        // tslint:disable-next-line
-        util_1.isFn(set) && set.call(this, data, cb);
-    },
-    getData: function (key) {
-        var data = this && (this.data || this.state);
-        if (util_1.isObj(data)) {
-            return data[key];
-        }
-    },
-    modalBindMethod: function () {
-        if (global && global.$gaic) {
-            return "componentWillMount";
-        }
-        else {
-            return "onReady";
-        }
-    },
-};
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(3)))
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
+exports.isObj = void 0;
+function isObj(obj) {
+    var toString = Object.prototype.toString;
+    return toString.call(obj) === toString.call({});
 }
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
+exports.isObj = isObj;
 
 
 /***/ })

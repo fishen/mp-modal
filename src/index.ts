@@ -1,153 +1,202 @@
-import { isFn, isObj, isStr } from "./util";
+import { isObj } from "./util";
 
-import { defaultProvider, IModalProvider } from "./provider";
-
-export interface IModalData<T = any> {
+interface IModalOptions {
     /**
-     * The modal box display status
+     * Modal name
+     * @default modal
      */
-    visible: boolean;
+    name?: string;
     /**
-     * The  modal box binding data
-     */
-    data: T;
-}
-
-export interface IModalOptions {
-    name?: string | symbol;
-    /**
-     * Whether to automatically close the modal, after calling the any callback function(success or fail).
+     * Whether to automatically close the modal after the callback function is executed
+     * @default true
      */
     selfClosing?: boolean;
-    /**
-     * The page or component object.
-     */
-    target?: any;
-    /**
-     * The success callback function's name for binding.
-     */
-    successKey?: string;
-    /**
-     * The failure callback function's name for binding.
-     */
-    failKey?: string;
 }
 
 export class Modal<T = any> {
-    /**
-     * Get the modal box display status
-     */
-    public get visible(): boolean {
-        return this.getData("visible");
+
+    private options: IModalOptions;
+
+    constructor(options: IModalOptions = {}) {
+        this.options = Object.assign({ selfClosing: true }, options);
     }
+
     /**
-     * Get the binding data by the modal box
+     * Get modal visible status in data used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return {this.modal.visible()&&(<View></View>)}
+     *      }
+     * }
+     *
      */
-    public get data(): T {
-        return this.getData("data");
+    public visible() {
+        return this.get('visible');
     }
+
     /**
-     * Get the registered success callback function.
-     * It is generally used for the callback function of operation success, confirmation and other operations.
+     * Get modal data in data used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return <MyComonent props={this.modal.data()}></MyComonent>
+     *      }
+     * }
+     *
      */
-    public get success(): (...args: any) => any {
-        const { target, successKey } = this.options;
-        return target && target[successKey];
+    public data() {
+        return this.get('data');
     }
+
     /**
-     * Get the registered failure function.
-     * It can be a callback function for operations such as error handling, closing, and canceling events.
+     * Get modal success callback used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return <MyComonent onSuccess={this.modal.success()}></MyComonent>
+     *      }
+     * }
+     *
      */
-    public get fail(): (...args: any) => any {
-        const { target, failKey } = this.options;
-        return target && target[failKey];
+    public success() {
+        const key = this.get('success');
+        if (!key) return;
+        const target = this.target();
+        return target[key] && target[key].bind(target);
     }
+
     /**
-     * The global system service provider
+     * Get modal fail callback used in TSX.
+     *
+     * @example
+     * {
+     *      modal=new Modal({ name:"modal" });
+     *      render(){
+     *          return <MyComonent onFail={this.modal.fail()}></MyComonent>
+     *      }
+     * }
+     *
      */
-    public static provider: IModalProvider = defaultProvider;
-    protected options: IModalOptions;
-    constructor(options?: IModalOptions) {
-        const { name } = Object.assign({}, options);
-        const traditional = isStr(name);
-        this.options = Object.assign({
-            failKey: traditional ? `${String(name)}Fail` : Symbol(),
-            name: Symbol(),
-            provider: defaultProvider,
-            selfClosing: true,
-            successKey: traditional ? `${String(name)}Success` : Symbol(),
-        }, options);
+    public fail() {
+        const key = this.get('success');
+        if (!key) return;
+        const target = this.target();
+        return target[key] && target[key].bind(target);
     }
+
+    private get(key: 'visible' | 'data' | 'success' | 'fail') {
+        if (!this.target) return;
+        const target = this.target();
+        const data = [target.data, target.state].find(item => item && item[this.options.name]);
+        return data && data[this.options.name][key];
+    }
+
+    private target: () => any;
+
     /**
-     * Get modal data with specific key.
-     * @param key the key of modal data.
+     * Bind for all modals in thisArg, the modal name will be set to it's property name if it's name is missing.
+     * @param thisArg
+     * @example
+     *
+     * Page({
+     *      modal1:new Modal({ name:'modal1' });
+     *      modal2:new Modal({ name:'modal2' });
+     *      onLoad(){
+     *          Modal.init(this);
+     *      }
+     * })
      */
-    public getData(key: keyof IModalData<T>): any {
-        const { target, name } = this.options;
-        const modalData: IModalData = Modal.provider.getData.call(target, name);
-        return modalData && modalData[key];
+    public static init(thisArg) {
+        Object.keys(thisArg)
+            .filter(key => thisArg[key] instanceof Modal)
+            .forEach(key => thisArg[key].bind(thisArg, { name: key }))
     }
+
     /**
      * Bind this argument with page or component object for current modal.
-     * @param thisArg page or component object.
-     * @example
-     * const modal=new Modal({target: someObj})
      *
-     * equals to
+     * @param thisArg page or component object.
+     * @param options modal options.
+     * @example
      *
      * const modal=new Modal();
-     * modal.bind(someObj);
+     * modal.bind(this);
      */
-    public bind(thisArg: any) {
-        this.options = this.options || {} as any;
-        this.options.target = thisArg;
+    public bind(thisArg, options?: IModalOptions) {
+        this.target = () => thisArg;
+        this.options = Object.assign({}, this.options, options);
         return this;
     }
+
+    private setData(data) {
+        const target = this.target();
+        const setData = target.setData || target.setState;
+        setData.call(target, data);
+    }
+
     /**
      * Show modal.
+     *
      * @param data modal data to set.
      * @param extra extra object data to set.
+     * @example
+     *
+     * <button bind:tap="showModal">show modal</button>
+     * <my-modal wx:if="{{modal.visible}}" props="{{modal.data}}" bind:complete="{{modal.success}}" bind:error="{{modal.fail}}"></my-modal>
+     *
+     * import { Modal } from 'mp-modal';
+     *
+     * Page({
+     *      showModal(){
+     *          new Modal({ name:'modal' })
+     *              .bind(this)
+     *              .show({...props})
+     *              .then(()=>console.log('success'))
+     *              .catch(()=>console.log('error'))
+     *      }
+     * })
+     *
      */
     public show(data?: T, extra?: object): Promise<any> {
-        const { target, successKey, failKey, name, selfClosing } = this.options;
-        if (!target) { throw new Error("Please bind this argument by bind method first."); }
+        const target = this.target();
+        const name = this.options.name || 'modal';
+        const success = `$modal_${name}_success_key`;
+        const fail = `$modal_${name}_fail_key`;
         let promise = new Promise((resolve, reject) => {
-            target[successKey] = resolve;
-            target[failKey] = reject;
+            target[success] = resolve;
+            target[fail] = reject;
         });
-        Modal.provider.setData.call(target, {
-            [name]: { visible: true, data },
-            ...(isObj(extra) && extra != null ? extra : {}),
-        });
-        if (selfClosing) {
+        this.setData({
+            [name]: {
+                data,
+                fail,
+                success,
+                visible: true,
+            },
+            ...(isObj(extra) ? extra : {}),
+        })
+        if (this.options.selfClosing) {
             promise = promise.finally(() => this.hide());
         }
         return promise;
     }
+
     /**
      * Hide modal
+     *
+     * @example
+     *
+     * this.modal.hide()
      */
     public hide() {
-        const { name, target } = this.options;
-        const tmpData = { [name]: { visible: false } };
-        Modal.provider.setData.call(target, tmpData);
+        const name = this.options.name || 'modal';
+        this.setData({ [name]: { visible: false } });
     }
-}
-
-/**
- * Create a Modal instance through the decorator.
- * @param options modal options.
- */
-export function modal(options?: Omit<IModalOptions, "target">) {
-    return function(target: any, name: string) {
-        let method = Modal.provider.modalBindMethod;
-        method = isFn(method) ? (method as any)() : method;
-        if (!isStr(method)) { throw new TypeError(`The "modalBindMethod" member of provider is required.`); }
-        const original = target[method as string];
-        target[name] = new Modal(Object.assign({ name }, options));
-        target[method as string] = function(...args: any[]) {
-            this[name].bind(this);
-            if (isFn(original)) { return original.apply(this, args); }
-        };
-    };
 }
