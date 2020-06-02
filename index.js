@@ -201,7 +201,7 @@ var Modal = /** @class */ (function () {
     Modal.init = function (thisArg) {
         Object.keys(thisArg)
             .filter(function (key) { return thisArg[key] instanceof Modal; })
-            .forEach(function (key) { return thisArg[key].bind(thisArg, { name: thisArg[key].name || key }); });
+            .forEach(function (key) { return thisArg[key].bind(thisArg, { name: thisArg[key].options.name || key }); });
     };
     /**
      * Bind this argument with page or component object for current modal.
