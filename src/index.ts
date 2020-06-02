@@ -116,7 +116,7 @@ export class Modal<T = any> {
     public static init(thisArg) {
         Object.keys(thisArg)
             .filter(key => thisArg[key] instanceof Modal)
-            .forEach(key => thisArg[key].bind(thisArg, { name: key }))
+            .forEach(key => thisArg[key].bind(thisArg, { name: thisArg[key].name || key }))
     }
 
     /**
